@@ -2,6 +2,7 @@ package ipapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -27,6 +28,12 @@ func IpInfo(ip string) (apiResp *models.IpInfo, err error) {
 	}
 
 	if err := json.Unmarshal(body, &apiResp); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	if apiResp.Status == "fail" {
+		err := errors.New("failed to check this IP, may be it is on private range")
 		log.Error(err)
 		return nil, err
 	}

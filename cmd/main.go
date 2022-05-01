@@ -32,6 +32,6 @@ func main() {
 
 	// server.Start
 
-	// resp, _ := ipapi.IpInfo("24.48.0.1")
+	// resp, _ := ipapi.IpInfo("192.168.0.1")
 	// fmt.Println(*resp)
 }
