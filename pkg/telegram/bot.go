@@ -12,12 +12,13 @@ type Bot struct {
 }
 
 func NewBot(token string, db *gorm.DB) Bot {
+
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	bot.Debug = true
+	// bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
