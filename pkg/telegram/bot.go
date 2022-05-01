@@ -26,30 +26,19 @@ func NewBot(token string) Bot {
 	return res
 }
 
-func (b *Bot) Start() error {
+func (b *Bot) Start() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
 	updates := b.tgBot.GetUpdatesChan(u)
 	b.handleUpdates(updates)
-
-	return nil
 }
 
-func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) error {
+func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
-		if update.Message != nil { // If we got a message
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-			msg.ReplyToMessageID = update.Message.MessageID
-
-			_, err := b.tgBot.Send(msg)
-			if err != nil {
-				return err
-			}
+		if update.Message != nil {
+			b.handleMessage(update.Message)
 		}
 	}
-
-	return nil
 }

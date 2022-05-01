@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/faked86/ip-telegram-bot/telegram"
+	"github.com/faked86/ip-telegram-bot/pkg/telegram"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
