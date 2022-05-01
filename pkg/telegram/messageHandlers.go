@@ -11,6 +11,7 @@ import (
 )
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) {
+	log.Printf("[%s] %s", message.From.UserName, message.Text)
 
 	if message.IsCommand() {
 		switch message.Command() {
@@ -23,41 +24,39 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 		return
 	}
 
-	log.Printf("[%s] %s", message.From.UserName, message.Text)
-
 	ip := message.Text
 
-	var msg string
-
-	if net.ParseIP(ip) == nil {
-
-		msg = fmt.Sprintf("IP Address: %s - Invalid", ip)
+	if net.ParseIP(ip) != nil {
+		b.handleValidIp(message.Chat.ID, ip)
+	} else {
+		msg := fmt.Sprintf("IP Address: %s - Invalid", ip)
 		log.Info(msg)
 		b.sendMessage(message.Chat.ID, msg)
-
-	} else {
-		msg = fmt.Sprintf("IP Address: %s - Valid\n", ip)
-		log.Info(msg)
-
-		apiResp, err := ipapi.IpInfo(ip)
-
-		if err != nil {
-			b.sendMessage(message.Chat.ID, "Failed to check this IP, may be it is on private range.")
-			return
-		}
-
-		res, err := json.Marshal(apiResp)
-		if err != nil {
-			log.Error(err)
-			b.sendMessage(message.Chat.ID, fmt.Sprint(err))
-			return
-		}
-
-		strRes := string(res)
-		b.sendMessage(message.Chat.ID, strRes)
 	}
 }
 
 func (b *Bot) handleCommandStart(chatID int64) {
+	log.Info("Start command")
 	b.sendMessage(chatID, "Hi I am IP checker bot. Send me IP address to get info about it.")
+}
+
+func (b *Bot) handleValidIp(chatID int64, ip string) {
+	msg := fmt.Sprintf("IP Address: %s - Valid\n", ip)
+	log.Info(msg)
+
+	apiResp, err := ipapi.IpInfo(ip)
+	if err != nil {
+		b.sendMessage(chatID, "Failed to check this IP, may be it is on private range.")
+		return
+	}
+
+	res, err := json.Marshal(apiResp)
+	if err != nil {
+		log.Error(err)
+		b.sendMessage(chatID, fmt.Sprint(err))
+		return
+	}
+
+	strRes := string(res)
+	b.sendMessage(chatID, strRes)
 }
