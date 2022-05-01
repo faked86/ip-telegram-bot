@@ -6,6 +6,7 @@ import (
 	// "crypto/sha1"
 	// "encoding/hex"
 
+	"github.com/faked86/ip-telegram-bot/pkg/database"
 	ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
 	// "github.com/faked86/ip-telegram-bot/pkg/telegram"
 
@@ -22,7 +23,8 @@ func init() {
 }
 
 func main() {
-	// db := database.Init()
+	db := database.Initiate()
+	fmt.Println(db)
 
 	// b := telegram.NewBot(os.Getenv("TOKEN"))
 	// b.Start()
@@ -30,6 +32,5 @@ func main() {
 	// server.Start
 
 	resp, _ := ipapi.IpInfo("24.48.0.1")
-	fmt.Println(resp)
-
+	fmt.Println(*resp)
 }
