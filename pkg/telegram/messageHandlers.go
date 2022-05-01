@@ -8,10 +8,14 @@ import (
 func (b *Bot) handleMessage(message *tgbotapi.Message) {
 
 	log.Printf("[%s] %s", message.From.UserName, message.Text)
-
 	msg := tgbotapi.NewMessage(message.Chat.ID, message.Text)
-	msg.ReplyToMessageID = message.MessageID
 
-	_, err := b.tgBot.Send(msg)
-	log.Error(err)
+	for i := 0; i < 3; i++ {
+		_, err := b.tgBot.Send(msg)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		break
+	}
 }

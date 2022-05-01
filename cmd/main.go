@@ -4,6 +4,9 @@ import (
 	"os"
 
 	"github.com/faked86/ip-telegram-bot/pkg/telegram"
+	// "fmt"
+
+	// ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,4 +24,6 @@ func main() {
 	b.Start()
 
 	// server.Start
+	// resp, _ := ipapi.IpInfo("24.48.0.1")
+	// fmt.Println(resp)
 }
