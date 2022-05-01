@@ -3,13 +3,15 @@ package telegram
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type Bot struct {
 	tgBot *tgbotapi.BotAPI
+	db    *gorm.DB
 }
 
-func NewBot(token string) Bot {
+func NewBot(token string, db *gorm.DB) Bot {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Panic(err)
@@ -21,6 +23,7 @@ func NewBot(token string) Bot {
 
 	res := Bot{
 		tgBot: bot,
+		db:    db,
 	}
 
 	return res

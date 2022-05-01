@@ -1,12 +1,14 @@
 package main
 
 import (
-	"os"
+	"fmt"
+	// "os"
+	// "crypto/sha1"
+	// "encoding/hex"
 
-	"github.com/faked86/ip-telegram-bot/pkg/telegram"
-	// "fmt"
+	ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
+	// "github.com/faked86/ip-telegram-bot/pkg/telegram"
 
-	// ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
@@ -20,10 +22,14 @@ func init() {
 }
 
 func main() {
-	b := telegram.NewBot(os.Getenv("TOKEN"))
-	b.Start()
+	// db := database.Init()
+
+	// b := telegram.NewBot(os.Getenv("TOKEN"))
+	// b.Start()
 
 	// server.Start
-	// resp, _ := ipapi.IpInfo("24.48.0.1")
-	// fmt.Println(resp)
+
+	resp, _ := ipapi.IpInfo("24.48.0.1")
+	fmt.Println(resp)
+
 }
