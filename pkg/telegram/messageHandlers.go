@@ -6,6 +6,7 @@ import (
 	"net"
 
 	ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
+	"github.com/faked86/ip-telegram-bot/pkg/models"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	log "github.com/sirupsen/logrus"
 )
@@ -16,7 +17,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	if message.IsCommand() {
 		switch message.Command() {
 		case "start":
-			b.handleCommandStart(message.Chat.ID)
+			b.handleCommandStart(*message)
 
 		default:
 			b.sendMessage(message.Chat.ID, "No such command.")
@@ -35,9 +36,19 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	}
 }
 
-func (b *Bot) handleCommandStart(chatID int64) {
+func (b *Bot) handleCommandStart(message tgbotapi.Message) {
 	log.Info("Start command")
-	b.sendMessage(chatID, "Hi I am IP checker bot. Send me IP address to get info about it.")
+
+	user := models.User{
+		ID:       message.From.ID,
+		UserName: message.From.UserName,
+		Admin:    false,
+	}
+	if res := b.db.FirstOrCreate(&user); res.Error != nil {
+		log.Error(res.Error)
+		b.sendMessage(message.From.ID, "Failed try to register you in our database. History will be unavailable.")
+	}
+	b.sendMessage(message.From.ID, "Hi I am IP checker bot. Send me IP address to get info about it.")
 }
 
 func (b *Bot) handleValidIp(chatID int64, ip string) {
