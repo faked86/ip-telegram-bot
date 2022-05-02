@@ -46,11 +46,11 @@ func (b *Bot) handleValidIp(chatID int64, ip string) {
 
 	apiResp, err := ipapi.IpInfo(ip)
 	if err != nil {
-		b.sendMessage(chatID, "Failed to check this IP, may be it is on private range.")
+		b.sendMessage(chatID, fmt.Sprint(err))
 		return
 	}
 
-	res, err := json.Marshal(apiResp)
+	res, err := json.MarshalIndent(apiResp, "", "    ")
 	if err != nil {
 		log.Error(err)
 		b.sendMessage(chatID, fmt.Sprint(err))
