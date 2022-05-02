@@ -18,8 +18,7 @@ func Initiate() *gorm.DB {
 		log.Fatalln(err)
 	}
 
-	db.AutoMigrate(&models.IpInfo{})
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.IpInfo{}, &models.User{}, &models.Request{})
 
 	return db
 }

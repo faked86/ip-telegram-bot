@@ -28,7 +28,9 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	ip := message.Text
 
 	if net.ParseIP(ip) != nil {
-		b.handleValidIp(message.Chat.ID, ip)
+		msg := fmt.Sprintf("IP Address: %s - Valid\n", ip)
+		log.Info(msg)
+		b.handleValidIp(*message, ip)
 	} else {
 		msg := fmt.Sprintf("IP Address: %s - Invalid", ip)
 		log.Info(msg)
@@ -44,30 +46,45 @@ func (b *Bot) handleCommandStart(message tgbotapi.Message) {
 		UserName: message.From.UserName,
 		Admin:    false,
 	}
-	if res := b.db.FirstOrCreate(&user); res.Error != nil {
+
+	if res := b.db.FirstOrCreate(&user, user); res.Error != nil {
 		log.Error(res.Error)
 		b.sendMessage(message.From.ID, "Failed try to register you in our database. History will be unavailable.")
 	}
+
+	log.Println("DB User:", user)
+
 	b.sendMessage(message.From.ID, "Hi I am IP checker bot. Send me IP address to get info about it.")
 }
 
-func (b *Bot) handleValidIp(chatID int64, ip string) {
-	msg := fmt.Sprintf("IP Address: %s - Valid\n", ip)
-	log.Info(msg)
+func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) {
 
-	apiResp, err := ipapi.IpInfo(ip)
-	if err != nil {
-		b.sendMessage(chatID, fmt.Sprint(err))
+	var apiResp *models.IpInfo
+	if dbRes := b.db.Where("ip = ?", ip).FirstOrCreate(&apiResp, models.IpInfo{IP: ip}); dbRes.Error != nil {
+		log.Error(dbRes.Error)
+		b.sendMessage(message.From.ID, fmt.Sprint(dbRes.Error))
 		return
+	}
+
+	if apiResp.Status == "" {
+		log.Print("Ip not from db")
+		resp, err := ipapi.IpInfo(ip)
+		if err != nil {
+			b.sendMessage(message.From.ID, fmt.Sprint(err))
+			return
+		}
+		b.db.Model(apiResp).Updates(resp)
+	} else {
+		log.Print("Ip from db")
 	}
 
 	res, err := json.MarshalIndent(apiResp, "", "    ")
 	if err != nil {
 		log.Error(err)
-		b.sendMessage(chatID, fmt.Sprint(err))
+		b.sendMessage(message.From.ID, fmt.Sprint(err))
 		return
 	}
 
 	strRes := string(res)
-	b.sendMessage(chatID, strRes)
+	b.sendMessage(message.From.ID, strRes)
 }
