@@ -13,18 +13,21 @@ import (
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	log.Printf("[%s] %s", message.From.UserName, message.Text)
+	var outMsg string
 
 	if message.IsCommand() {
+
 		switch message.Command() {
 		case "start":
-			b.handleCommandStart(*message)
+			outMsg = b.handleCommandStart(*message)
 
 		case "unique":
-			b.handleCommandUnique(message.From.ID)
+			outMsg = b.handleCommandUnique(message.From.ID)
 
 		default:
-			b.sendMessage(message.Chat.ID, "No such command.")
+			outMsg = "No such command."
 		}
+		b.sendMessage(message.Chat.ID, outMsg)
 		return
 	}
 
@@ -33,15 +36,15 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	if net.ParseIP(ip) != nil {
 		msg := fmt.Sprintf("IP Address: %s - Valid\n", ip)
 		log.Info(msg)
-		b.handleValidIp(*message, ip)
+		outMsg = b.handleValidIp(*message, ip)
 	} else {
-		msg := fmt.Sprintf("IP Address: %s - Invalid", ip)
-		log.Info(msg)
-		b.sendMessage(message.Chat.ID, msg)
+		outMsg = fmt.Sprintf("IP Address: %s - Invalid", ip)
+		log.Info(outMsg)
 	}
+	b.sendMessage(message.Chat.ID, outMsg)
 }
 
-func (b *Bot) handleCommandStart(message tgbotapi.Message) {
+func (b *Bot) handleCommandStart(message tgbotapi.Message) string {
 	log.Info("Start command")
 
 	user := models.User{
@@ -50,31 +53,34 @@ func (b *Bot) handleCommandStart(message tgbotapi.Message) {
 		Admin:    false,
 	}
 
+	errMsg := ""
 	if res := b.db.FirstOrCreate(&user, user); res.Error != nil {
 		log.Error(res.Error)
-		b.sendMessage(message.From.ID, "Failed try to register you in our database. History will be unavailable.")
+		errMsg = "Failed try to register you in our database. History will be unavailable."
+		// b.sendMessage(message.From.ID, "Failed try to register you in our database. History will be unavailable.")
 	}
 
 	log.Println("DB User:", user)
 
-	b.sendMessage(message.From.ID, "Hi I am IP checker bot. Send me IP address to get info about it.")
+	// b.sendMessage(message.From.ID, "Hi I am IP checker bot. Send me IP address to get info about it.")
+	return "Hi I am IP checker bot. Send me IP address to get info about it." + errMsg
 }
 
-func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) {
+func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
 
 	var apiResp *models.IpInfo
 	if dbRes := b.db.Where("ip = ?", ip).FirstOrCreate(&apiResp, models.IpInfo{IP: ip}); dbRes.Error != nil {
 		log.Error(dbRes.Error)
-		b.sendMessage(message.From.ID, fmt.Sprint(dbRes.Error))
-		return
+		// b.sendMessage(message.From.ID, fmt.Sprint(dbRes.Error))
+		return fmt.Sprint(dbRes.Error)
 	}
 
 	if apiResp.Status == "" {
 		log.Print("Ip not from db")
 		resp, err := ipapi.IpInfo(ip)
 		if err != nil {
-			b.sendMessage(message.From.ID, fmt.Sprint(err))
-			return
+			// b.sendMessage(message.From.ID, fmt.Sprint(err))
+			return fmt.Sprint(err)
 		}
 		b.db.Model(apiResp).Updates(resp)
 	} else {
@@ -84,27 +90,31 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) {
 	res, err := json.MarshalIndent(apiResp, "", "    ")
 	if err != nil {
 		log.Error(err)
-		b.sendMessage(message.From.ID, fmt.Sprint(err))
-		return
+		// b.sendMessage(message.From.ID, fmt.Sprint(err))
+		return fmt.Sprint(err)
 	}
 
-	strRes := string(res)
-	b.sendMessage(message.From.ID, strRes)
-
+	errMsg := ""
 	dbResReq := b.db.Create(&models.Request{UserID: message.From.ID, IpInfoIP: ip})
 	if dbResReq.Error != nil {
 		log.Error(dbResReq.Error)
-		b.sendMessage(message.From.ID, "Failed to save request to database.")
+		// b.sendMessage(message.From.ID, "Failed to save request to database.")
+		errMsg = " Failed to save request to database."
 	}
+
+	strRes := string(res)
+	// b.sendMessage(message.From.ID, strRes)
+
+	return strRes + errMsg
 }
 
-func (b *Bot) handleCommandUnique(userID int64) {
+func (b *Bot) handleCommandUnique(userID int64) string {
 	var reqs []models.Request
 	res := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
 	if res.Error != nil {
 		log.Error(res.Error)
-		b.sendMessage(userID, "Something wrong in unique function.")
-		return
+		// b.sendMessage(userID, "Something wrong in unique function.")
+		return "Something wrong in unique function."
 	}
 
 	ips := make([]string, len(reqs))
@@ -120,10 +130,11 @@ func (b *Bot) handleCommandUnique(userID int64) {
 		res, err := json.MarshalIndent(info, "", "    ")
 		if err != nil {
 			log.Error(err)
-			b.sendMessage(userID, fmt.Sprint(err))
-			return
+			// b.sendMessage(userID, fmt.Sprint(err))
+			return fmt.Sprint(err)
 		}
 		msg = msg + "\n" + string(res)
 	}
-	b.sendMessage(userID, msg)
+	// b.sendMessage(userID, msg)
+	return msg
 }
