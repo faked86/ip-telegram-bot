@@ -19,7 +19,8 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 		case "start":
 			b.handleCommandStart(*message)
 
-		case "history":
+		case "unique":
+			b.handleCommandUnique(message.From.ID)
 
 		default:
 			b.sendMessage(message.Chat.ID, "No such command.")
@@ -95,4 +96,34 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) {
 		log.Error(dbResReq.Error)
 		b.sendMessage(message.From.ID, "Failed to save request to database.")
 	}
+}
+
+func (b *Bot) handleCommandUnique(userID int64) {
+	var reqs []models.Request
+	res := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
+	if res.Error != nil {
+		log.Error(res.Error)
+		b.sendMessage(userID, "Something wrong in unique function.")
+		return
+	}
+
+	ips := make([]string, len(reqs))
+	for i, req := range reqs {
+		ips[i] = req.IpInfoIP
+	}
+
+	var ipInfos []models.IpInfo
+	b.db.Where("ip IN ?", ips).Find(&ipInfos)
+
+	msg := "Unique results:"
+	for _, info := range ipInfos {
+		res, err := json.MarshalIndent(info, "", "    ")
+		if err != nil {
+			log.Error(err)
+			b.sendMessage(userID, fmt.Sprint(err))
+			return
+		}
+		msg = msg + "\n" + string(res)
+	}
+	b.sendMessage(userID, msg)
 }
