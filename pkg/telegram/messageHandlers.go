@@ -57,12 +57,10 @@ func (b *Bot) handleCommandStart(message tgbotapi.Message) string {
 	if res := b.db.FirstOrCreate(&user, user); res.Error != nil {
 		log.Error(res.Error)
 		errMsg = "Failed try to register you in our database. History will be unavailable."
-		// b.sendMessage(message.From.ID, "Failed try to register you in our database. History will be unavailable.")
 	}
 
 	log.Println("DB User:", user)
 
-	// b.sendMessage(message.From.ID, "Hi I am IP checker bot. Send me IP address to get info about it.")
 	return "Hi I am IP checker bot. Send me IP address to get info about it." + errMsg
 }
 
@@ -71,7 +69,6 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
 	var apiResp *models.IpInfo
 	if dbRes := b.db.Where("ip = ?", ip).FirstOrCreate(&apiResp, models.IpInfo{IP: ip}); dbRes.Error != nil {
 		log.Error(dbRes.Error)
-		// b.sendMessage(message.From.ID, fmt.Sprint(dbRes.Error))
 		return fmt.Sprint(dbRes.Error)
 	}
 
@@ -79,7 +76,6 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
 		log.Print("Ip not from db")
 		resp, err := ipapi.IpInfo(ip)
 		if err != nil {
-			// b.sendMessage(message.From.ID, fmt.Sprint(err))
 			return fmt.Sprint(err)
 		}
 		b.db.Model(apiResp).Updates(resp)
@@ -90,7 +86,6 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
 	res, err := json.MarshalIndent(apiResp, "", "    ")
 	if err != nil {
 		log.Error(err)
-		// b.sendMessage(message.From.ID, fmt.Sprint(err))
 		return fmt.Sprint(err)
 	}
 
@@ -98,12 +93,10 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
 	dbResReq := b.db.Create(&models.Request{UserID: message.From.ID, IpInfoIP: ip})
 	if dbResReq.Error != nil {
 		log.Error(dbResReq.Error)
-		// b.sendMessage(message.From.ID, "Failed to save request to database.")
 		errMsg = " Failed to save request to database."
 	}
 
 	strRes := string(res)
-	// b.sendMessage(message.From.ID, strRes)
 
 	return strRes + errMsg
 }
@@ -113,7 +106,6 @@ func (b *Bot) handleCommandUnique(userID int64) string {
 	res := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
 	if res.Error != nil {
 		log.Error(res.Error)
-		// b.sendMessage(userID, "Something wrong in unique function.")
 		return "Something wrong in unique function."
 	}
 
@@ -130,11 +122,9 @@ func (b *Bot) handleCommandUnique(userID int64) string {
 		res, err := json.MarshalIndent(info, "", "    ")
 		if err != nil {
 			log.Error(err)
-			// b.sendMessage(userID, fmt.Sprint(err))
 			return fmt.Sprint(err)
 		}
 		msg = msg + "\n" + string(res)
 	}
-	// b.sendMessage(userID, msg)
 	return msg
 }
