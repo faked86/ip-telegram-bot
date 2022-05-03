@@ -90,9 +90,7 @@ func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) {
 	strRes := string(res)
 	b.sendMessage(message.From.ID, strRes)
 
-	var request *models.Request
-	dbResReq := b.db.Where("user_id = ? AND ip_info_ip = ?", message.From.ID, ip).FirstOrCreate(&request, models.Request{UserID: message.From.ID, IpInfoIP: ip})
-
+	dbResReq := b.db.Create(&models.Request{UserID: message.From.ID, IpInfoIP: ip})
 	if dbResReq.Error != nil {
 		log.Error(dbResReq.Error)
 		b.sendMessage(message.From.ID, "Failed to save request to database.")
