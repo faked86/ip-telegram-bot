@@ -19,10 +19,13 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 
 		switch message.Command() {
 		case "start":
-			outMsg = b.handleCommandStart(*message)
+			outMsg = b.handleCommandStart(message)
 
 		case "unique":
 			outMsg = b.handleCommandUnique(message.From.ID)
+
+		case "spam":
+			outMsg = b.handleCommandSpam(message)
 
 		default:
 			outMsg = "No such command."
@@ -44,7 +47,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	b.sendMessage(message.Chat.ID, outMsg)
 }
 
-func (b *Bot) handleCommandStart(message tgbotapi.Message) string {
+func (b *Bot) handleCommandStart(message *tgbotapi.Message) string {
 	log.Info("Start command")
 
 	user := models.User{
@@ -127,4 +130,38 @@ func (b *Bot) handleCommandUnique(userID int64) string {
 		msg = msg + "\n" + string(res)
 	}
 	return msg
+}
+
+func (b *Bot) handleCommandSpam(message *tgbotapi.Message) string {
+	var user models.User
+	qRes := b.db.Where("id = ?", message.From.ID).First(&user)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	if !user.Admin {
+		log.Printf("Not admin trying admin command (%s)", user.UserName)
+		return "You should be admin to use this command."
+	}
+
+	msg := message.CommandArguments()
+	if msg == "" {
+		log.Printf("Wrong /spam usage by %s", user.UserName)
+		return "Command format: '/spam <message>' e.g. '/spam Hello!'"
+	}
+
+	var allUsers []models.User
+	res := b.db.Find(&allUsers)
+	if res.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	log.Printf("%s initiated mass spam to all our users [%d]", user.UserName, len(allUsers))
+	for _, target := range allUsers {
+		b.sendMessage(target.ID, msg)
+	}
+
+	return "Done."
 }
