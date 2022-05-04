@@ -31,6 +31,15 @@ cd ip-telegram-bot
 - Command `/admin <user>` to make `<user>` admin or make regular user if `<user>` is already admin.
 - Command `/history <user>` to check `<user>`'s request history.
 
+#### How to make first admin:
+1. Register in database by running `/start` in telegram chat.
+2. Connect to database via tool like pgAdmin 4:
+      - POSTGRES USER: pg
+      - POSTGRES PASSWORD: pass
+      - POSTGRES DB: crud
+3. Run query `UPDATE public.users SET admin = true WHERE username = '<your username>'`
+
+
 ### API Server
 
 - `GET    /get_users` - Get all users.
