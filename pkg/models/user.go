@@ -2,6 +2,6 @@ package models
 
 type User struct {
 	ID       int64
-	UserName string
+	Username string
 	Admin    bool
 }

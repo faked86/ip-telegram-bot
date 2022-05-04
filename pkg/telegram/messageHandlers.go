@@ -27,9 +27,13 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 		case "spam":
 			outMsg = b.handleCommandSpam(message)
 
+		case "admin":
+			outMsg = b.handleCommandAdmin(message)
+
 		default:
 			outMsg = "No such command."
 		}
+
 		b.sendMessage(message.Chat.ID, outMsg)
 		return
 	}
@@ -39,7 +43,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 	if net.ParseIP(ip) != nil {
 		msg := fmt.Sprintf("IP Address: %s - Valid\n", ip)
 		log.Info(msg)
-		outMsg = b.handleValidIp(*message, ip)
+		outMsg = b.handleValidIp(message, ip)
 	} else {
 		outMsg = fmt.Sprintf("IP Address: %s - Invalid", ip)
 		log.Info(outMsg)
@@ -52,7 +56,7 @@ func (b *Bot) handleCommandStart(message *tgbotapi.Message) string {
 
 	user := models.User{
 		ID:       message.From.ID,
-		UserName: message.From.UserName,
+		Username: message.From.UserName,
 		Admin:    false,
 	}
 
@@ -67,7 +71,7 @@ func (b *Bot) handleCommandStart(message *tgbotapi.Message) string {
 	return "Hi I am IP checker bot. Send me IP address to get info about it." + errMsg
 }
 
-func (b *Bot) handleValidIp(message tgbotapi.Message, ip string) string {
+func (b *Bot) handleValidIp(message *tgbotapi.Message, ip string) string {
 
 	var apiResp *models.IpInfo
 	if dbRes := b.db.Where("ip = ?", ip).FirstOrCreate(&apiResp, models.IpInfo{IP: ip}); dbRes.Error != nil {
@@ -141,13 +145,13 @@ func (b *Bot) handleCommandSpam(message *tgbotapi.Message) string {
 	}
 
 	if !user.Admin {
-		log.Printf("Not admin trying admin command (%s)", user.UserName)
+		log.Printf("Not admin trying admin command (%s)", user.Username)
 		return "You should be admin to use this command."
 	}
 
 	msg := message.CommandArguments()
 	if msg == "" {
-		log.Printf("Wrong /spam usage by %s", user.UserName)
+		log.Printf("Wrong /spam usage by %s", user.Username)
 		return "Command format: '/spam <message>' e.g. '/spam Hello!'"
 	}
 
@@ -158,10 +162,57 @@ func (b *Bot) handleCommandSpam(message *tgbotapi.Message) string {
 		return "Something wrong with query to database."
 	}
 
-	log.Printf("%s initiated mass spam to all our users [%d]", user.UserName, len(allUsers))
+	log.Printf("%s initiated mass spam to all our users [%d]", user.Username, len(allUsers))
 	for _, target := range allUsers {
 		b.sendMessage(target.ID, msg)
 	}
 
 	return "Done."
+}
+
+func (b *Bot) handleCommandAdmin(message *tgbotapi.Message) string {
+	var user models.User
+	qRes := b.db.Where("id = ?", message.From.ID).First(&user)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	if !user.Admin {
+		log.Printf("Not admin trying admin command (%s)", user.Username)
+		return "You should be admin to use this command."
+	}
+
+	username := message.CommandArguments()
+	if username == "" {
+		log.Printf("Wrong /admin usage by %s", user.Username)
+		return "Command format: '/admin <username>' e.g. '/admin user1'"
+	}
+
+	var targetUsers []models.User
+	qRes = b.db.Where("username = ?", username).Find(&targetUsers)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	if len(targetUsers) == 0 {
+		log.Printf("Wrong /admin usage by %s", user.Username)
+		return "No such user in my database."
+	}
+
+	targetUser := targetUsers[0]
+	if !targetUser.Admin {
+		targetUser.Admin = true
+		b.db.Save(&targetUser)
+		log.Printf("%s made %s admin", user.Username, targetUser.Username)
+		b.sendMessage(targetUser.ID, "You are admin now.")
+		return fmt.Sprintf("User %s is now admin.", targetUser.Username)
+	}
+
+	targetUser.Admin = false
+	b.db.Save(&targetUser)
+	b.sendMessage(targetUser.ID, "You are no longer admin.")
+	log.Printf("%s made %s no admin", user.Username, targetUser.Username)
+	return fmt.Sprintf("User %s is no longer admin.", targetUser.Username)
 }
