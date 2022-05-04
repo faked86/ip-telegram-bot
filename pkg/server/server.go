@@ -33,5 +33,5 @@ func (s *Server) Start() {
 
 func (s *Server) configureRouter() {
 	s.router.HandleFunc("/get_users", s.handleGetUsers())
-	// s.router.HandleFunc("/get_history_by_tg", s.handleGetHistory())
+	s.router.HandleFunc("/get_history_by_tg", s.handleGetHistory())
 }

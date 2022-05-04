@@ -113,9 +113,9 @@ func (b *Bot) handleValidIp(message *tgbotapi.Message, ip string) string {
 
 func (b *Bot) handleCommandUnique(userID int64) string {
 	var reqs []models.Request
-	res := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
-	if res.Error != nil {
-		log.Error(res.Error)
+	qRes := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
 		return "Something went wrong in unique function."
 	}
 
@@ -127,15 +127,13 @@ func (b *Bot) handleCommandUnique(userID int64) string {
 	var ipInfos []models.IpInfo
 	b.db.Where("ip IN ?", ips).Find(&ipInfos)
 
-	msg := "Unique results:"
-	for _, info := range ipInfos {
-		res, err := json.MarshalIndent(info, "", "    ")
-		if err != nil {
-			log.Error(err)
-			return fmt.Sprint(err)
-		}
-		msg = msg + "\n" + string(res)
+	msg := "Unique results:\n"
+	res, err := json.MarshalIndent(ipInfos, "", "    ")
+	if err != nil {
+		log.Error(err)
+		return fmt.Sprint(err)
 	}
+	msg = msg + string(res)
 	return msg
 }
 
@@ -256,7 +254,7 @@ func (b *Bot) handleCommandHistory(message *tgbotapi.Message) string {
 	res := b.db.Select("ip_info_ip").Where("user_id = ?", targetUser.ID).Find(&reqs)
 	if res.Error != nil {
 		log.Error(res.Error)
-		return "Something went wrong in unique function."
+		return "Something went wrong in history function."
 	}
 
 	msg := fmt.Sprintf("History of search by %s:", targetUser.Username)
