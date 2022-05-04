@@ -1,6 +1,18 @@
 version: "3.8"
 
 services:
+  ip-telegram-bot:
+    container_name: main_app
+    depends_on:
+      - database
+    build: 
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      - PG_ADDRESS=postgres://pg:pass@database:5432/crud
+      - PORT=8080
+
   database:
     container_name: database
     image: postgres:12.8
