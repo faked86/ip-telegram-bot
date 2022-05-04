@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	// "crypto/sha1"
-	// "encoding/hex"
-
 	"github.com/faked86/ip-telegram-bot/pkg/database"
-	// ipapi "github.com/faked86/ip-telegram-bot/pkg/ip-API"
+	"github.com/faked86/ip-telegram-bot/pkg/server"
 	"github.com/faked86/ip-telegram-bot/pkg/telegram"
 
 	"github.com/joho/godotenv"
@@ -28,10 +25,8 @@ func main() {
 	fmt.Println(db)
 
 	b := telegram.NewBot(os.Getenv("TOKEN"), db)
-	b.Start()
+	go b.Start()
 
-	// server.Start
-
-	// resp, _ := ipapi.IpInfo("192.168.0.1")
-	// fmt.Println(*resp)
+	s := server.NewServer(os.Getenv("PORT"), db)
+	s.Start()
 }
