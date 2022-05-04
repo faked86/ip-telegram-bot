@@ -30,6 +30,9 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) {
 		case "admin":
 			outMsg = b.handleCommandAdmin(message)
 
+		case "history":
+			outMsg = b.handleCommandHistory(message)
+
 		default:
 			outMsg = "No such command."
 		}
@@ -113,7 +116,7 @@ func (b *Bot) handleCommandUnique(userID int64) string {
 	res := b.db.Select("DISTINCT ip_info_ip").Where("user_id = ?", userID).Find(&reqs)
 	if res.Error != nil {
 		log.Error(res.Error)
-		return "Something wrong in unique function."
+		return "Something went wrong in unique function."
 	}
 
 	ips := make([]string, len(reqs))
@@ -215,4 +218,51 @@ func (b *Bot) handleCommandAdmin(message *tgbotapi.Message) string {
 	b.sendMessage(targetUser.ID, "You are no longer admin.")
 	log.Printf("%s made %s no admin", user.Username, targetUser.Username)
 	return fmt.Sprintf("User %s is no longer admin.", targetUser.Username)
+}
+
+func (b *Bot) handleCommandHistory(message *tgbotapi.Message) string {
+	var user models.User
+	qRes := b.db.Where("id = ?", message.From.ID).First(&user)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	if !user.Admin {
+		log.Printf("Not admin trying admin command (%s)", user.Username)
+		return "You should be admin to use this command."
+	}
+
+	username := message.CommandArguments()
+	if username == "" {
+		log.Printf("Wrong /history usage by %s", user.Username)
+		return "Command format: '/history <username>' e.g. '/history user1'"
+	}
+
+	var targetUsers []models.User
+	qRes = b.db.Where("username = ?", username).Find(&targetUsers)
+	if qRes.Error != nil {
+		log.Error(qRes.Error)
+		return "Something wrong with query to database."
+	}
+
+	if len(targetUsers) == 0 {
+		log.Printf("Wrong /history usage by %s", user.Username)
+		return "No such user in my database."
+	}
+
+	targetUser := targetUsers[0]
+	var reqs []models.Request
+	res := b.db.Select("ip_info_ip").Where("user_id = ?", targetUser.ID).Find(&reqs)
+	if res.Error != nil {
+		log.Error(res.Error)
+		return "Something went wrong in unique function."
+	}
+
+	msg := fmt.Sprintf("History of search by %s:", targetUser.Username)
+	for _, req := range reqs {
+		msg = msg + "\n    " + req.IpInfoIP
+	}
+	log.Printf("%s checked %s's history", user.Username, targetUser.Username)
+	return msg
 }
