@@ -1,6 +1,6 @@
 # IP-TELEGRAM-BOT
 
-## INSTALATION
+## INSTALLATION
 
 Prerequisites:
 - docker
