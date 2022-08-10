@@ -28,7 +28,7 @@ cd ip-telegram-bot
 
 #### For admins:
 - Command `/spam <message>` to send `<message>` to all users in our database.
-- Command `/admin <user>` to make `<user>` admin or make regular user if `<user>` is already admin.
+- Command `/admin <user>` to make `<user>` admin or make them regular user if `<user>` is already admin.
 - Command `/history <user>` to check `<user>`'s request history.
 
 #### How to make first admin:
