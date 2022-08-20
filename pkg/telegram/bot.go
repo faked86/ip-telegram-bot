@@ -18,8 +18,6 @@ func NewBot(token string, db *gorm.DB) Bot {
 		log.Panic(err)
 	}
 
-	// bot.Debug = true
-
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := Bot{
