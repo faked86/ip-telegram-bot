@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/faked86/ip-telegram-bot/pkg/database"
@@ -22,7 +21,6 @@ func init() {
 
 func main() {
 	db := database.Initiate()
-	fmt.Println(db)
 
 	b := telegram.NewBot(os.Getenv("TOKEN"), db)
 	go b.Start()
