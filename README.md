@@ -47,4 +47,4 @@ cd ip-telegram-bot
 - `GET    /users/{telegram_id}/history` - Get user history by `telegram_id`.
 - `DELETE /requests/{request_id}` - Delete request from history by `request_id`.
 
- You can get `<request_id>` on `/get_history_by_tg?id=<telegram id>` page.
+ You can get `request_id` on `/users/{telegram_id}/history` page.
