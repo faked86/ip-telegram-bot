@@ -70,7 +70,7 @@ func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *Server) GetHistory(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetUserHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-type", "application/json")
 
 	vars := mux.Vars(r)
@@ -111,7 +111,7 @@ func (s *Server) GetHistory(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *Server) DeleteFromHistory(w http.ResponseWriter, r *http.Request) {
+func (s *Server) DeleteRequest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
