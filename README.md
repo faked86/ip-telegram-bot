@@ -42,8 +42,9 @@ cd ip-telegram-bot
 
 ### API Server
 
-- `GET    /get_users` - Get all users.
-- `GET    /get_users?id=<telegram id>` - Get user by `<telegram id>`.
-- `GET    /get_history_by_tg?id=<telegram id>` - Get user history by `<telegram id>`.
-- `DELETE /delete_from_history/<request_id>` - Delete request from history by `<request_id>`.
+- `GET    /users` - Get all users.
+- `GET    /users/{telegram_id}` - Get user by `telegram_id`.
+- `GET    /users/{telegram_id}/history` - Get user history by `telegram_id`.
+- `DELETE /requests/{request_id}` - Delete request from history by `request_id`.
+
  You can get `<request_id>` on `/get_history_by_tg?id=<telegram id>` page.
