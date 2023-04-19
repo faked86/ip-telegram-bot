@@ -35,6 +35,7 @@ func (s *Server) Start() {
 
 func (s *Server) configureRouter() {
 	s.router.HandleFunc("/users", s.GetUsers).Methods("GET")
+	s.router.HandleFunc("/users/{id}", s.GetUser).Methods("GET")
 	s.router.HandleFunc("/history", s.GetHistory).Methods("GET")
 	s.router.HandleFunc("/history/{id}", s.DeleteFromHistory).Methods("DELETE")
 }

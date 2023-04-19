@@ -11,30 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-type", "application/json")
-	q := r.URL.Query()
-	idStr := q.Get("id")
 
-	if idStr == "" {
-		var users []models.User
-		queryRes := s.db.Find(&users)
-		if queryRes.Error != nil {
-			log.Error(queryRes.Error)
-			w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, queryRes.Error)))
-			return
-		}
-
-		res, err := json.MarshalIndent(users, "", "    ")
-		if err != nil {
-			log.Error(err)
-			w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
-			return
-		}
-
-		w.Write(res)
-		return
-	}
+	vars := mux.Vars(r)
+	idStr := vars["id"]
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -68,16 +49,32 @@ func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *Server) GetHistory(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-type", "application/json")
-	q := r.URL.Query()
-	idStr := q.Get("id")
 
-	if idStr == "" {
-		log.Error("/get_history_by_tg no id specified")
-		w.Write([]byte(`{"error": "Enter user id like: /get_history_by_tg?id=1}"`))
+	var users []models.User
+	queryRes := s.db.Find(&users)
+	if queryRes.Error != nil {
+		log.Error(queryRes.Error)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, queryRes.Error)))
 		return
 	}
+
+	res, err := json.MarshalIndent(users, "", "    ")
+	if err != nil {
+		log.Error(err)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+
+	w.Write(res)
+}
+
+func (s *Server) GetHistory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-type", "application/json")
+
+	vars := mux.Vars(r)
+	idStr := vars["id"]
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -112,7 +109,6 @@ func (s *Server) GetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(res)
-
 }
 
 func (s *Server) DeleteFromHistory(w http.ResponseWriter, r *http.Request) {
