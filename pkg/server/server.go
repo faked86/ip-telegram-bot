@@ -25,6 +25,8 @@ func NewServer(port string, db *gorm.DB) Server {
 func (s *Server) Start() {
 	s.configureRouter()
 
+	log.Printf("HTTP server starting at port: %s", s.port)
+
 	err := http.ListenAndServe(":"+s.port, s.router)
 	if err != nil {
 		log.Fatal(err)
