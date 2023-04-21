@@ -20,7 +20,8 @@ func init() {
 }
 
 func main() {
-	db := database.Initiate()
+	dbURL := os.Getenv("PG_ADDRESS")
+	db := database.Initiate(dbURL)
 
 	b := telegram.NewBot(os.Getenv("TOKEN"), db)
 	go b.Start()
