@@ -1,9 +1,7 @@
-# syntax=docker/dockerfile:1
-
-FROM golang:1.18-alpine
+FROM golang:1.21-alpine
 RUN apk add git
 
-WORKDIR /app
+WORKDIR /src/app
 
 COPY go.mod ./
 COPY go.sum ./
@@ -11,8 +9,10 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /ip-telegram-bot ./cmd
+RUN go build -o server ./cmd/server/main.go
 
 EXPOSE 8080
 
-CMD [ "/ip-telegram-bot" ]
+ENTRYPOINT [ "./entrypoint.sh" ]
+
+CMD [ "./server" ]
