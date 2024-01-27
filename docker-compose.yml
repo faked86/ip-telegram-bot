@@ -1,12 +1,13 @@
 version: "3.8"
 
 services:
-  ip-telegram-bot:
-    container_name: main_app
+  server:
+    container_name: server
     depends_on:
       - database
     build:
       context: .
+      dockerfile: server.Dockerfile
     ports:
       - 8080:8080
     environment:
@@ -16,6 +17,20 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=crud
       - PORT=8080
+
+  bot:
+    container_name: bot
+    depends_on:
+      - database
+    build:
+      context: .
+      dockerfile: bot.Dockerfile
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=crud
 
   database:
     container_name: database
